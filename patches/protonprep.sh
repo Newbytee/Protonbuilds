@@ -281,6 +281,9 @@
     #WINE CUSTOM PATCHES
     #add your own custom patch lines below
 
+    patch -Np1 < ../patches/planet-zoo-fixes/0001-ntdll-Always-set-case-insensitive.patch
+    patch -Np1 < ../patches/planet-zoo-fixes/0001-ntdll-Return-STATUS_PENDING-from-NtReadFile-for-asyn.patch
+
     ./dlls/winevulkan/make_vulkan
     ./tools/make_requests
     autoreconf -f
