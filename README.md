@@ -2,7 +2,9 @@
 
 This is hacked-together version of [GloriousEggroll's fantastic Proton GE](https://github.com/GloriousEggroll/proton-ge-custom) including extra patches to fix Planet Zoo. These can be found inside patches/planet-zoo-fixes. 
 
-Building works like any other version of Proton GE. I suggest you consult the Proton GE README for details, but here's the short version
+Note that this should not be used with other games. It contains game-specific hacks which likely won't play nicely with other applications, and there is no runtime check to verify that the current game is Planet Zoo as implementing this causes the game to freeze on launch due to what seems to be a data race (likely due to the function taking too long to execute from grabbing an environment variable). 
+
+Building works like any other version of Proton GE. I suggest you consult the Proton GE README for details, but here's the short version:
 
 ```sh
 $ ./patches/protonprep.sh
