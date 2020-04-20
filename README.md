@@ -7,6 +7,8 @@ Note that this should not be used with other games. It contains game-specific ha
 Building works like any other version of Proton GE. I suggest you consult the Proton GE README for details, but here's the short version:
 
 ```sh
+$ git clone --recurse-submodules --single-branch --branch planet-zoo https://github.com/Newbytee/Protonbuilds.git protonbuilds
+$ cd protonbuilds
 $ ./patches/protonprep.sh
 $ build_name=<insert build name here> make redist
 ```
