@@ -8,3 +8,5 @@ Building works like any other version of Proton GE. I suggest you consult the Pr
 $ ./patches/protonprep.sh
 $ build_name=<insert build name here> make redist
 ```
+
+Credit goes to the brilliant people in this thread for coming up with how to get this game running: https://github.com/ValveSoftware/Proton/issues/3201
