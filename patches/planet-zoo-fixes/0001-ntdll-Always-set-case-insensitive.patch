@@ -1,0 +1,26 @@
+diff --git a/dlls/ntdll/directory.c b/dlls/ntdll/directory.c
+index be55a5a8c1..8288b556fa 100644
+--- a/dlls/ntdll/directory.c
++++ b/dlls/ntdll/directory.c
+@@ -2672,7 +2672,7 @@ NTSTATUS nt_to_unix_file_name_attr( const OBJECT_ATTRIBUTES *attr, ANSI_STRING *
+     char *unix_name;
+     int name_len, unix_len;
+     NTSTATUS status;
+-    BOOLEAN check_case = !(attr->Attributes & OBJ_CASE_INSENSITIVE);
++    BOOLEAN check_case = 0;
+ 
+     if (!attr->RootDirectory)  /* without root dir fall back to normal lookup */
+         return wine_nt_to_unix_file_name( attr->ObjectName, unix_name_ret, disposition, check_case );
+diff --git a/dlls/ntdll/file.c b/dlls/ntdll/file.c
+index a9770290e0..00e9ca9333 100644
+--- a/dlls/ntdll/file.c
++++ b/dlls/ntdll/file.c
+@@ -214,6 +214,8 @@ static NTSTATUS FILE_CreateFile( PHANDLE handle, ACCESS_MASK access, POBJECT_ATT
+ 
+     if (alloc_size) FIXME( "alloc_size not supported\n" );
+ 
++    attr->Attributes |= OBJ_CASE_INSENSITIVE;
++
+     if (options & FILE_OPEN_BY_FILE_ID)
+         io->u.Status = file_id_to_unix_file_name( attr, &unix_name );
+     else

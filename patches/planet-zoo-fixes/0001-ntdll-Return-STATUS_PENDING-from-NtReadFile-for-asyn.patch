@@ -1,0 +1,65 @@
+From f1c9bc15694e8b058e64f9ffb12b261c7b94c007 Mon Sep 17 00:00:00 2001
+From: Paul Gofman <pgofman@codeweavers.com>
+Date: Sat, 18 Apr 2020 03:34:27 +0300
+Subject: [PATCH] ntdll: Return STATUS_PENDING from NtReadFile() for async read
+ in case of EOF.
+
+---
+ dlls/ntdll/file.c       | 6 +++---
+ dlls/ntdll/tests/file.c | 4 ++--
+ 2 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/dlls/ntdll/file.c b/dlls/ntdll/file.c
+index a9770290e0..b34b2169f0 100644
+--- a/dlls/ntdll/file.c
++++ b/dlls/ntdll/file.c
+@@ -1018,13 +1018,13 @@ done:
+ 
+ err:
+     if (needs_close) close( unix_handle );
+-    if (status == STATUS_SUCCESS || (status == STATUS_END_OF_FILE && !async_read))
++    if (status == STATUS_SUCCESS || status == STATUS_END_OF_FILE)
+     {
+         io_status->u.Status = status;
+         io_status->Information = total;
+         TRACE("= SUCCESS (%u)\n", total);
+         if (hEvent) NtSetEvent( hEvent, NULL );
+-        if (apc && !status) NtQueueApcThread( GetCurrentThread(), (PNTAPCFUNC)apc,
++        if (apc && (!status || async_read)) NtQueueApcThread( GetCurrentThread(), (PNTAPCFUNC)apc,
+                                               (ULONG_PTR)apc_user, (ULONG_PTR)io_status, 0 );
+     }
+     else
+@@ -1033,7 +1033,7 @@ err:
+         if (status != STATUS_PENDING && hEvent) NtResetEvent( hEvent, NULL );
+     }
+ 
+-    ret_status = async_read && type == FD_TYPE_FILE && status == STATUS_SUCCESS
++    ret_status = async_read && type == FD_TYPE_FILE && (status == STATUS_SUCCESS || status == STATUS_END_OF_FILE)
+             ? STATUS_PENDING : status;
+ 
+     if (send_completion) NTDLL_AddCompletion( hFile, cvalue, status, total, ret_status == STATUS_PENDING );
+diff --git a/dlls/ntdll/tests/file.c b/dlls/ntdll/tests/file.c
+index 68c6a79e79..6ae6b2bdab 100644
+--- a/dlls/ntdll/tests/file.c
++++ b/dlls/ntdll/tests/file.c
+@@ -652,7 +652,7 @@ static void read_file_test(void)
+     iosb.Information = 0xdeadbeef;
+     offset.QuadPart = strlen(text) + 2;
+     status = pNtReadFile( handle, event, apc, &apc_count, &iosb, buffer, 2, &offset, NULL );
+-    ok(status == STATUS_PENDING || status == STATUS_END_OF_FILE /* before Vista */, "expected STATUS_PENDING or STATUS_END_OF_FILE, got %#x\n", status);
++    ok(status == STATUS_PENDING || broken(status == STATUS_END_OF_FILE) /* before Vista */, "expected STATUS_PENDING or STATUS_END_OF_FILE, got %#x\n", status);
+     if (status == STATUS_PENDING)  /* vista */
+     {
+         WaitForSingleObject( event, 1000 );
+@@ -4540,7 +4540,7 @@ static void test_read_write(void)
+     ret = ReadFile(hfile, buf, sizeof(buf), &bytes, &ovl);
+     ok(!ret, "ReadFile should fail\n");
+     ret = GetLastError();
+-    ok(ret == ERROR_IO_PENDING || ret == ERROR_HANDLE_EOF /* before Vista */, "expected ERROR_IO_PENDING or ERROR_HANDLE_EOF, got %d\n", ret);
++    ok(ret == ERROR_IO_PENDING || broken(ret == ERROR_HANDLE_EOF) /* before Vista */, "expected ERROR_IO_PENDING or ERROR_HANDLE_EOF, got %d\n", ret);
+     ok(bytes == 0, "bytes %u\n", bytes);
+ 
+     off = SetFilePointer(hfile, 0, NULL, FILE_CURRENT);
+-- 
+2.25.2
+
